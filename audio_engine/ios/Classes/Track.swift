@@ -10,10 +10,9 @@ final class Track {
   private let timePitch = AVAudioUnitTimePitch()     // keep just for pitch shifts
   let mixer = AVAudioMixerNode()             // per-track gain/pan
   private let file: AVAudioFile
-
+  private var looping = false
   var gain: Float = 1.0 { didSet { mixer.outputVolume = gain } }
   var pan: Float = 0.0  { didSet { mixer.pan = pan } } // -1..+1
-
   var pitchFactor: Float = 1.0 { didSet { applyPitchAndRate() } } // factor (1.0 = no change)
   var rate: Float = 1.0        { didSet { applyPitchAndRate() } } // 0.25..4.0
 
@@ -53,45 +52,116 @@ final class Track {
 
     varispeed.rate = max(0.25, min(rate, 4.0))                 // 0.25..4
     timePitch.pitch = Float(12.0 * log2(Double(max(pitchFactor, 0.001))) * 100.0)
-
     varispeed.bypass = neutralRate
     timePitch.bypass = neutralPitch
   }
 
-  func schedule(offsetMs: Int, at when: AVAudioTime) {
-    let sr = file.processingFormat.sampleRate
-    let offsetFrames = AVAudioFramePosition((Double(offsetMs) / 1000.0) * sr)
-    let clamped = max(0, min(offsetFrames, file.length))
-    let remaining = AVAudioFrameCount(file.length - clamped)
-    player.stop()
-    file.framePosition = clamped
-    player.scheduleSegment(file, startingFrame: clamped, frameCount: remaining, at: when, completionHandler: nil)
-  }
-
-  func play(at when: AVAudioTime) {
-    if !player.isPlaying {
-      player.play(at: when)
-    }
-  }
-
+  // Schedule a single track at nil and calls player.play() immediately
   func start(offsetMs: Int) {
-    // Immediate start: schedule now and call play() without explicit time
+    looping = true
+    player.stop()
+
     let sr = file.processingFormat.sampleRate
     let offsetFrames = AVAudioFramePosition((Double(offsetMs) / 1000.0) * sr)
     let clamped = max(0, min(offsetFrames, file.length))
-    let remaining = AVAudioFrameCount(file.length - clamped)
-    player.stop()
-    file.framePosition = clamped
-    player.scheduleSegment(file, startingFrame: clamped, frameCount: remaining, at: nil, completionHandler: nil)
+    let remaining = AVAudioFrameCount(max(0, file.length - clamped))
+    let fullCount = AVAudioFrameCount(file.length)
+    guard fullCount > 0 else { return }
+
+    if remaining > 0 {
+      // Lead-in now: offset → end
+      player.scheduleSegment(
+        file,
+        startingFrame: clamped,
+        frameCount: remaining,
+        at: nil,
+        completionHandler: nil
+      )
+    } else {
+      // Start from the top now
+      player.scheduleSegment(
+        file,
+        startingFrame: 0,
+        frameCount: fullCount,
+        at: nil,
+        completionHandler: nil
+      )
+    }
+
+    queueFullLoop()
+    let targetGain = gain
+    mixer.outputVolume = 0.0
     player.play()
+    fade(to: targetGain, duration: 1.0)
   }
 
+  // Stops whatever is playing, mix or single
   func stop() {
-    player.stop()
+    looping = false
+    fade(to: 0.0, duration: 1.0, completion: nil)
+
+    /*
+    let currentGain = mixer.outputVolume
+    fade(to: 0.0, duration: 1.0) { [weak self] in
+      guard let self = self else { return }
+      self.player.stop()
+      self.mixer.outputVolume = currentGain
+    }
+    */
   }
 
   func dispose() {
     stop()
-    // Nodes stay attached; engine owns them. No explicit detach required unless you want to.
+    // Nodes stay attached; engine owns them.
+  }
+
+  // MARK: - Looping internals
+
+  /// Always keep one full-file segment queued; when it finishes, enqueue another, used by mix and single
+  private func queueFullLoop() {
+    guard looping else { return }
+    let fullCount = AVAudioFrameCount(file.length)
+    guard fullCount > 0 else { return }
+
+    // Append directly after whatever is already queued.
+    player.scheduleSegment(
+      file,
+      startingFrame: 0,
+      frameCount: fullCount,
+      at: nil
+    ) { [weak self] in
+      self?.queueFullLoop()
+    }
+  }
+
+  // Fade logic to fade in and out when playing sounds.
+  private func fade(to target: Float,
+                    duration: TimeInterval = 0.02,
+                    completion: (() -> Void)? = nil) {
+    print(">>> FADE CALLED: target=\(target), duration=\(duration)")
+    let steps = 20
+    let stepDuration = duration / Double(steps)
+    let start = mixer.outputVolume
+    let delta = target - start
+
+    guard steps > 0, duration > 0 else {
+      mixer.outputVolume = target
+      completion?()
+      return
+    }
+
+    var i = 0
+    func step() {
+      i += 1
+      let t = Double(i) / Double(steps)
+      mixer.outputVolume = start + delta * Float(t)
+      if i >= steps {
+        completion?()
+      } else {
+        DispatchQueue.main.asyncAfter(deadline: .now() + stepDuration, execute: step)
+      }
+    }
+
+    DispatchQueue.main.async(execute: step)
   }
 }

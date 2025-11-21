@@ -9,14 +9,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  audio_engine:
+    path: ../audio_engine
   flutter_riverpod: ^2.6.1
   path_provider: ^2.1.4
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   in_app_purchase: ^3.2.3
   shared_preferences: ^2.5.3
-  audio_engine:
-    path: ../audio_engine
+  share_plus: ^10.0.0
+  url_launcher: ^6.3.2
+  package_info_plus: ^9.0.0
+  flutter_markdown_plus: ^1.0.5
+  flutter_linkify: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -26,9 +31,19 @@ dev_dependencies:
   build_runner: ^2.3.3
   rename: ^3.1.0
   change_app_package_name: ^1.5.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/sounds.json
     - assets/sounds/
+    - assets/legal/faq.txt
+    - assets/legal/privacy.txt
+    - assets/legal/terms.txt
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  remove_alpha_ios: true

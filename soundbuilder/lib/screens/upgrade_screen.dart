@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Clipboard + rootBundle
 import 'package:soundbuilder/core/theme.dart';
 import 'package:soundbuilder/services/iap_service.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 
-/// Upgrade screen
+/// === Configure your support email here ===
+const _kSupportEmail = 'redbeakdev@gmail.com';
+
 class UpgradeScreen extends StatelessWidget {
   const UpgradeScreen({super.key});
 
@@ -12,7 +19,6 @@ class UpgradeScreen extends StatelessWidget {
     final iap = IapService.instance;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Upgrade')),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -54,10 +60,6 @@ class UpgradeScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                TextButton(
-                  onPressed: () => iap.restore(),
-                  child: const Text('Restore Purchases'),
-                ),
                 const SizedBox(height: 8),
                 ValueListenableBuilder<bool>(
                   valueListenable: iap.isPremium,
@@ -95,7 +97,7 @@ class UpgradeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Icon(Icons.workspace_premium, size: 72, color: AppTheme.primaryVariant),
+          Icon(Icons.workspace_premium, size: 72, color: AppTheme.nearblack),
           const SizedBox(height: 16),
           Text('Go Premium', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
@@ -150,7 +152,7 @@ class UpgradeScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: .2),
+                  color: Colors.amber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text('Best Value', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -173,7 +175,8 @@ class UpgradeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSupportSection(BuildContext context) { /* unchanged */ 
+  /// Support section: single fused email action.
+  Widget _buildSupportSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -181,14 +184,18 @@ class UpgradeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text('Support & Feedback', style: Theme.of(context).textTheme.titleLarge),
         ),
-        ListTile(title: const Text('Send Feedback'), onTap: () {}),
-        ListTile(title: const Text('Report a Bug'), onTap: () {}),
-        ListTile(title: const Text('FAQ'), onTap: () {}),
+        ListTile(
+          leading: const Icon(Icons.email_outlined),
+          title: const Text('Contact Support'),
+          subtitle: Text(_kSupportEmail),
+          onTap: () => _sendEmail(context, subject: 'Support Request'),
+        ),
       ],
     );
   }
 
-  Widget _buildAboutSection(BuildContext context) { /* unchanged */
+  /// About/legal section: open in-app Markdown pages.
+  Widget _buildAboutSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,9 +203,112 @@ class UpgradeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text('About & Legal', style: Theme.of(context).textTheme.titleLarge),
         ),
-        ListTile(title: const Text('Privacy Policy'), onTap: () {}),
-        ListTile(title: const Text('Terms of Service'), onTap: () {}),
+        ListTile(
+          title: const Text('FAQ'),
+          onTap: () => _openMarkdown(context, 'FAQ', 'assets/legal/faq.txt'),
+        ),
+        ListTile(
+          title: const Text('Privacy Policy'),
+          onTap: () => _openMarkdown(context, 'Privacy Policy', 'assets/legal/privacy.txt'),
+        ),
+        ListTile(
+          title: const Text('Terms of Service'),
+          onTap: () => _openMarkdown(context, 'Terms of Service', 'assets/legal/terms.txt'),
+        ),
       ],
+    );
+  }
+
+  // ---------------- Helpers ----------------
+
+  Future<void> _openMarkdown(BuildContext context, String title, String assetPath) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => _MarkdownScreen(title: title, assetPath: assetPath)),
+    );
+  }
+
+  Future<void> _sendEmail(
+    BuildContext context, {
+    required String subject,
+    String? bodyTemplate,
+  }) async {
+    // ✅ cache everything derived from context BEFORE any await
+    final messenger = ScaffoldMessenger.of(context);
+    final platformName = Theme.of(context).platform.name;
+
+    final pkg = await PackageInfo.fromPlatform(); // safe now
+    final iap = IapService.instance;
+
+    final body = StringBuffer()
+      ..writeln(bodyTemplate ?? 'Hi,')
+      ..writeln()
+      ..writeln('— — —')
+      ..writeln('App: ${pkg.appName} ${pkg.version}+${pkg.buildNumber}')
+      ..writeln('Premium: ${iap.isPremium.value ? "Yes" : "No"}')
+      ..writeln('Platform: $platformName');
+
+    final uri = Uri(
+      scheme: 'mailto',
+      path: _kSupportEmail,
+      queryParameters: <String, String>{
+        'subject': subject,
+        'body': body.toString(),
+      },
+    );
+
+    final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    if (!launched) {
+      await Clipboard.setData(const ClipboardData(text: _kSupportEmail));
+      // ✅ use the cached messenger instead of context after await
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No mail app found. Address copied.')),
+      );
+    }
+  }
+}
+
+/// Simple in-app Markdown reader for legal/FAQ pages.
+class _MarkdownScreen extends StatelessWidget {
+  const _MarkdownScreen({required this.title, required this.assetPath});
+
+  final String title;
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTxt = assetPath.toLowerCase().endsWith('.txt');
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: FutureBuilder<String>(
+        future: rootBundle.loadString(assetPath),
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snap.hasError) {
+            return Center(child: Text('Failed to load: $assetPath'));
+          }
+          return isTxt
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: SelectableLinkify(
+                  text: snap.data ?? '',
+                  onOpen: (link) => launchUrl(Uri.parse(link.url), mode: LaunchMode.externalApplication),
+                ),
+              )
+            : Markdown(
+                data: snap.data ?? '',
+                selectable: true,
+                softLineBreak: true,
+                onTapLink: (text, href, title) {
+                  if (href != null) {
+                    launchUrl(Uri.parse(href), mode: LaunchMode.externalApplication);
+                  }
+                },
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              );
+        },
+      ),
     );
   }
 }

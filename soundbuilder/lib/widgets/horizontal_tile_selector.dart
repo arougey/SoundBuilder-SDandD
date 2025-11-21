@@ -18,19 +18,20 @@ class HorizontalTileSelector extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 0,
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primary
-              : AppTheme.secondary.withAlpha(30),
+              ? AppTheme.mutedred
+              : AppTheme.calmgrey,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Text(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isSelected ? AppTheme.onPrimary : AppTheme.onSecondary,
+            color: isSelected ? AppTheme.nearblack : AppTheme.nearwhite,
             fontWeight: FontWeight.w600,
           ),
 

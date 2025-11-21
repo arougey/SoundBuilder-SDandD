@@ -46,5 +46,11 @@
     "assetPath": "assets/sounds/tapping3.wav",
     "category": "Objects",
     "subcategory": "Tapping"
+  },
+  {
+    "name": "40 HZ",
+    "assetPath": "assets/sounds/40HZ.wav",
+    "category": "Hertz",
+    "subcategory": "40 HZ"
   }
 ]

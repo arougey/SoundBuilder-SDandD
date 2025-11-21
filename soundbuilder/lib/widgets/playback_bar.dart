@@ -1,9 +1,9 @@
 // lib/widgets/playback_bar.dart
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:soundbuilder/providers/audio_providers.dart';
 import 'package:soundbuilder/core/theme.dart';
+import 'dense_slider_row.dart';
 
 class PlaybackBar extends ConsumerStatefulWidget {
   const PlaybackBar({super.key});
@@ -21,7 +21,7 @@ class _PlaybackBarState extends ConsumerState<PlaybackBar> {
 
     return Material(
       elevation: 4,
-      color: AppTheme.background,
+      color: AppTheme.nearblack,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         child: Column(
@@ -69,7 +69,11 @@ class _PlaybackBarState extends ConsumerState<PlaybackBar> {
                       }
                     },
                   ),
-                  IconButton(icon: const Icon(Icons.stop), onPressed: svc.stopAll),
+                  if (svc.isPlaying)
+                  IconButton(
+                    key: const ValueKey('stop'),
+                    icon: const Icon(Icons.stop),
+                    onPressed: svc.stopAll),
                 ],
               ),
             ),
@@ -79,41 +83,51 @@ class _PlaybackBarState extends ConsumerState<PlaybackBar> {
               firstChild: const SizedBox.shrink(),
               secondChild: Column(
                 children: [
-                  _DenseSliderRow(
-                    icon: Icons.volume_up,
-                    label: 'Volume',
+                  ValueListenableBuilder<double>(
                     valueListenable: svc.volume,
-                    min: 0,
-                    max: 1,
-                    divisions: 100,
-                    onChanged: svc.setVolume,
+                    builder: (_, value, __) => DenseSliderRow(
+                      icon: Icons.volume_up,
+                      value: value,
+                      min: 0,
+                      max: 3,
+                      center: 1.0,
+                      onChanged: svc.setVolume,
+                    ),
                   ),
-                  _DenseSliderRow(
-                    icon: Icons.speed,
-                    label: 'Speed',
+                  ValueListenableBuilder<double>(
                     valueListenable: svc.speed,
-                    min: .5,
-                    max: 2.0,
-                    divisions: 100,
-                    onChanged: svc.setSpeed,
+                    builder: (_, value, __) => DenseSliderRow(
+                      icon: Icons.speed,
+                      value: value,
+                      min: 0,
+                      max: 3.0,
+                      center: 1.0,
+                      onChanged: svc.setSpeed,
+                    ),
                   ),
-                  _DenseSliderRow(
-                    icon: Icons.music_note,
-                    label: 'Pitch',
+                  /*
+                  ValueListenableBuilder<double>(
                     valueListenable: svc.pitch,
-                    min: .5,
-                    max: 2.0,
-                    divisions: 100,
-                    onChanged: svc.setPitch,
+                    builder: (_, value, __) => DenseSliderRow(
+                      icon: Icons.graphic_eq,
+                      value: value,
+                      min: 0,
+                      max: 2,
+                      center: 1.0,
+                      onChanged: svc.setPitch,
+                    ),
                   ),
-                  _DenseSliderRow(
-                    icon: Icons.pan_tool,
-                    label: 'Pan',
+                  */
+                  ValueListenableBuilder<double>(
                     valueListenable: svc.pan,
-                    min: -1.0,
-                    max: 1.0,
-                    divisions: 100,
-                    onChanged: svc.setPan,
+                    builder: (_, value, __) => DenseSliderRow(
+                      icon: Icons.pan_tool,
+                      value: value,
+                      min: -1.0,
+                      max: 1.0,
+                      center: 0.0,
+                      onChanged: svc.setPan,
+                    ),
                   ),
                 ],
               ),
@@ -125,74 +139,6 @@ class _PlaybackBarState extends ConsumerState<PlaybackBar> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DenseSliderRow extends StatelessWidget {
-  final IconData icon;
-  final String? label;
-  final ValueListenable<double> valueListenable;
-  final double min;
-  final double max;
-  final int? divisions;
-  final ValueChanged<double> onChanged;
-
-  const _DenseSliderRow({
-    required this.icon,
-    this.label,
-    required this.valueListenable,
-    required this.min,
-    required this.max,
-    this.divisions,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final sliderTheme = SliderTheme.of(context).copyWith(
-      trackHeight: 2,
-      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-      overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-    );
-
-    return ValueListenableBuilder<double>(
-      valueListenable: valueListenable,
-      builder: (_, v, __) => Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20),
-              if (label != null)
-                Text(
-                  label!,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 10,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: .7),
-                      ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SliderTheme(
-              data: sliderTheme,
-              child: Slider(
-                min: min,
-                max: max,
-                divisions: divisions,
-                value: v,
-                onChanged: onChanged,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

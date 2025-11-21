@@ -15,7 +15,7 @@ class PresetCard extends StatelessWidget {
 
   final VoidCallback onPlay;
   final VoidCallback onStop;
-  final VoidCallback onShare;
+  //TODO final VoidCallback onShare;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
 
@@ -25,7 +25,7 @@ class PresetCard extends StatelessWidget {
     required this.isPlaying,
     required this.onPlay,
     required this.onStop,
-    required this.onShare,
+    //TODO required this.onShare,
     this.onDelete,
     this.onEdit,
   });
@@ -33,7 +33,7 @@ class PresetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppTheme.surface.withAlpha(230),
+      color: AppTheme.calmgrey.withAlpha(230),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
       child: Padding(
@@ -41,7 +41,7 @@ class PresetCard extends StatelessWidget {
         child: Row(
           children: [
             // Headphone icon for the build
-            const Icon(Icons.headset, size: 28, color: AppTheme.primary),
+            const Icon(Icons.headset, size: 28, color: AppTheme.nearwhite),
             const SizedBox(width: 12),
             // Build name
             Expanded(
@@ -55,23 +55,23 @@ class PresetCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isPlaying ? Icons.stop : Icons.play_arrow,
-                color: AppTheme.secondary,
+                color: AppTheme.nearwhite,
               ),
               onPressed: isPlaying ? onStop : onPlay,
             ),
-
+            /*TODO
             // Share button
             IconButton(
               icon: const Icon(Icons.share),
-              color: AppTheme.onSurface,
+              color: AppTheme.nearwhite,
               onPressed: onShare,
             ),
-
+            */
             // Optional edit
             if (onEdit != null) ...[
               IconButton(
                 icon: const Icon(Icons.edit),
-                color: AppTheme.onSurface,
+                color: AppTheme.nearwhite,
                 onPressed: onEdit,
               ),
             ],
@@ -80,7 +80,7 @@ class PresetCard extends StatelessWidget {
             if (onDelete != null) ...[
               IconButton(
                 icon: const Icon(Icons.delete),
-                color: AppTheme.onSurface,
+                color: AppTheme.nearwhite,
                 onPressed: onDelete,
               ),
             ],

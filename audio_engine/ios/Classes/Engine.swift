@@ -130,10 +130,9 @@ final class Engine {
 
   func startAll(offsetsMs: [Int: Int]) {
     startEngineIfNeeded()
-    let nanosPerMs: UInt64 = 1_000_000
-    let when = AVAudioTime(hostTime: mach_absolute_time() + 30 * nanosPerMs)
-    for (id, off) in offsetsMs { tracks[id]?.schedule(offsetMs: off, at: when) }
-    for id in offsetsMs.keys { tracks[id]?.play(at: when) }
+    for (id, off) in offsetsMs {
+      tracks[id]?.start(offsetMs: off)
+    }
   }
 
   func stopAll() { tracks.values.forEach { $0.stop() } }

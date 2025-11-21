@@ -54,12 +54,6 @@
     "subcategory": "75 HZ"
   },
   {
-    "name": "40 HZ",
-    "assetPath": "assets/sounds/40HZ.wav",
-    "category": "Hertz",
-    "subcategory": "40 HZ"
-  },
-  {
     "name": "963 HZ",
     "assetPath": "assets/sounds/963HZ.wav",
     "category": "Hertz",

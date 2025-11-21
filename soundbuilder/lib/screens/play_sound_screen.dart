@@ -1,5 +1,7 @@
 // lib/screens/play_sound_screen.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,14 +36,22 @@ class _PlaySoundsScreenState extends ConsumerState<PlaySoundsScreen> {
   String? _playingPresetName;
   String? _playingSoundName;
 
+  late final StreamSubscription _presetsSub;
+
   @override
   void initState() {
     super.initState();
     presets = StorageService.instance.getAllPresets();
-    StorageService.instance.watch().listen((_) {
+    _presetsSub = StorageService.instance.watch().listen((_) {
       if (!mounted) return;
       setState(() => presets = StorageService.instance.getAllPresets());
     });
+  }
+
+  @override
+  void dispose() {
+    _presetsSub.cancel();
+    super.dispose();
   }
 
   @override
@@ -50,7 +60,6 @@ class _PlaySoundsScreenState extends ConsumerState<PlaySoundsScreen> {
     final soundAsync = ref.watch(allSoundsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Play a Sound')),
       body: soundAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error loading sounds: $e')),
@@ -133,20 +142,21 @@ class _PlaySoundsScreenState extends ConsumerState<PlaySoundsScreen> {
         return PresetCard(
           preset: p,
           isPlaying: isPlaying,
-          onPlay: () {
-            svc.stopAll();
+          onPlay: () async {
+            await svc.stopAll();
             final layers = p.items.map((item) {
-              final sound =
-                  allSounds.firstWhere((s) => s.name == item.soundName);
+              final sound = allSounds.firstWhere((s) => s.name == item.soundName);
               return BuildLayer(
                 sound: sound,
                 volume: item.volume,
                 speed: item.speed,
                 pitch: item.pitch,
+                pan: item.pan,
                 offset: item.offset,
               );
             }).toList();
-            svc.playMix(layers);
+
+            await svc.playMix(layers);
             setState(() {
               _playingPresetName = p.name;
               _playingSoundName = null;
@@ -156,14 +166,18 @@ class _PlaySoundsScreenState extends ConsumerState<PlaySoundsScreen> {
             svc.stopAll();
             setState(() => _playingPresetName = null);
           },
+          /*TODO
           onShare: () {
-            // TODO: share logic
+             
           },
+          */
           onDelete: () async {
-            await StorageService.instance.deletePreset(p.name);
+            final name = p.name;
+            await StorageService.instance.deletePreset(name);
+
+            if (!mounted) return;
             setState(() {
-              presets.removeAt(i);
-              if (_playingPresetName == p.name) {
+              if (_playingPresetName == name) {
                 _playingPresetName = null;
                 svc.stopAll();
               }
@@ -237,18 +251,24 @@ class _PlaySoundsScreenState extends ConsumerState<PlaySoundsScreen> {
               SoundCard(
                 sound: s,
                 isPlaying: s.name == _playingSoundName,
-                onToggle: () {
-                  svc.stopAll();
-                  final isPlaying = s.name == _playingSoundName;
-                  if (!isPlaying) {
-                    svc.playSound(s.assetPath, title: s.name);
-                    setState(() {
-                      _playingSoundName = s.name;
-                      _playingPresetName = null;
-                    });
-                  } else {
+                onToggle: () async {
+                  final isSameSound = s.name == _playingSoundName;
+
+                  if (isSameSound) {
+                    // Just stop the currently playing sound
+                    await svc.stopAll();
                     setState(() => _playingSoundName = null);
+                    return;
                   }
+
+                  // Different sound: stop whatever is playing, then start this one
+                  await svc.stopAll();
+                  await svc.playSound(s.assetPath, title: s.name);
+
+                  setState(() {
+                    _playingSoundName = s.name;
+                    _playingPresetName = null;
+                  });
                 },
                 onDelete: null,
                 onAdd: null,

@@ -1,0 +1,25 @@
+{
+  // Keep Gradle/IDE noise hidden inside the app
+  "files.exclude": {
+    "**/android/.gradle": true,
+    "**/android/.idea": true,
+    "**/build": true
+  },
+
+  "search.exclude": {
+    "**/android/.gradle": true,
+    "**/android/.idea": true,
+    "**/.pub-cache/**": true
+  },
+
+  // Don’t import Gradle projects from pub cache
+  "java.import.exclusions": [
+    "**/.pub-cache/**"
+  ],
+
+  // Don’t watch heavy cache dirs
+  "files.watcherExclude": {
+    "**/.pub-cache/**": true
+  },
+  "java.configuration.updateBuildConfiguration": "automatic",
+}
