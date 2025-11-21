@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Fire",
+    "assetPath": "assets/sounds/cracklingfire.wav",
+    "category": "Nature",
+    "subcategory": "Fire"
+  },
+  {
+    "name": "Rain with Thunder",
+    "assetPath": "assets/sounds/rainthunder.wav",
+    "category": "Nature",
+    "subcategory": "Rain"
+  },
+  {
+    "name": "Stream",
+    "assetPath": "assets/sounds/stream.wav",
+    "category": "Nature",
+    "subcategory": "Water"
+  },
+  {
+    "name": "Ocean Waves",
+    "assetPath": "assets/sounds/waves.wav",
+    "category": "Nature",
+    "subcategory": "Water"
+  },
+  {
+    "name": "Blizzard",
+    "assetPath": "assets/sounds/blizzard.wav",
+    "category": "Nature",
+    "subcategory": "Storms"
+  },
+  {
+    "name": "Winter Storm",
+    "assetPath": "assets/sounds/winterstorm.wav",
+    "category": "Nature",
+    "subcategory": "Storms"
+  },
+  {
+    "name": "Distant Thunderstorm",
+    "assetPath": "/Users/alexrougebec/Projects/Apps/SoundBuilder/soundbuilder/assets/sounds/strongthunderstorm.wav",
+    "category": "Nature",
+    "subcategory": "Storms"
+  },
+  {
+    "name": "432 HZ",
+    "assetPath": "assets/sounds/432HZ.wav",
+    "category": "Hertz",
+    "subcategory": "432 HZ"
+  },
+  {
+    "name": "75 HZ",
+    "assetPath": "assets/sounds/75HZ.wav",
+    "category": "Hertz",
+    "subcategory": "75 HZ"
+  },
+  {
+    "name": "40 HZ",
+    "assetPath": "assets/sounds/40HZ.wav",
+    "category": "Hertz",
+    "subcategory": "40 HZ"
+  },
+  {
+    "name": "963 HZ",
+    "assetPath": "assets/sounds/963HZ.wav",
+    "category": "Hertz",
+    "subcategory": "963 HZ"
+  }
+]

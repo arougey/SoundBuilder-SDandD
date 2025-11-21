@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Brushing",
+    "assetPath": "assets/sounds/brushing.wav",
+    "category": "Objects",
+    "subcategory": "Brushing"
+  },
+  {
+    "name": "Brushing 1",
+    "assetPath": "assets/sounds/brushing1.wav",
+    "category": "Objects",
+    "subcategory": "Brushing"
+  },
+  {
+    "name": "Scratching",
+    "assetPath": "assets/sounds/scratching.wav",
+    "category": "Objects",
+    "subcategory": "Scratching"
+  },
+  {
+    "name": "Scratching Bubbles",
+    "assetPath": "assets/sounds/scratchingbubbles.wav",
+    "category": "Objects",
+    "subcategory": "Scratching"
+  },
+  {
+    "name": "Sharp Foam",
+    "assetPath": "assets/sounds/sharpfoam.wav",
+    "category": "Objects",
+    "subcategory": "Foam"
+  },
+  {
+    "name": "Tapping 1",
+    "assetPath": "assets/sounds/tapping1.wav",
+    "category": "Objects",
+    "subcategory": "Tapping"
+  },
+  {
+    "name": "Tapping 2",
+    "assetPath": "assets/sounds/tapping2.wav",
+    "category": "Objects",
+    "subcategory": "Tapping"
+  },
+  {
+    "name": "Tapping 3",
+    "assetPath": "assets/sounds/tapping3.wav",
+    "category": "Objects",
+    "subcategory": "Tapping"
+  }
+]
